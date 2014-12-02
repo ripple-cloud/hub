@@ -15,5 +15,5 @@ RUN make
 RUN make install
 RUN adduser --system --disabled-password --disabled-login mosquitto
 
-EXPOSE 1883
-CMD /usr/local/sbin/mosquitto
+EXPOSE 60000
+CMD /usr/local/sbin/mosquitto -p 60000

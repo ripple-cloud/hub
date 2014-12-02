@@ -4,5 +4,5 @@ DOCKER_CERT_PATH?=$(PWD)/certs/
 
 start-mosquitto:
 	docker build -t mosquitto mosquitto
-	docker run -p 60000:1883 mosquitto
+	docker run -it -p 60000:1883 mosquitto
 .PHONY: start-mosquitto
