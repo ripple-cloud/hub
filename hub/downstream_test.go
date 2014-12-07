@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"net"
 	"testing"
 	"time"
@@ -10,7 +11,7 @@ import (
 	"github.com/ripple/message"
 )
 
-var up Upstream = newMockUpstream()
+var up *mockUpstream = newMockUpstream()
 var network = "tcp4"
 var laddr = ":60001"
 
@@ -33,6 +34,7 @@ func doRequest(req []byte) (*message.Message, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer c.Close()
 
 	// send message
 	if _, err = c.Write(req); err != nil {
@@ -59,7 +61,7 @@ func TestInvalidJSONMessage(t *testing.T) {
 	}
 }
 
-func TestRegisterMessage(t *testing.T) {
+func TestRegisterSuccess(t *testing.T) {
 	req := message.NewMessage()
 	req.Type = message.Register
 	req.Meta["id"] = "app_001"
@@ -77,7 +79,28 @@ func TestRegisterMessage(t *testing.T) {
 	}
 }
 
-func TestDeregisterMessage(t *testing.T) {
+func TestRegisterError(t *testing.T) {
+	up.SetError(errors.New("register_failed"))
+	defer up.ClearError()
+
+	req := message.NewMessage()
+	req.Type = message.Register
+	req.Meta["id"] = "app_001"
+	b, err := req.Encode()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	res, err := doRequest(b)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res.Type != message.Error || res.Meta["error"] != "register_failed" {
+		t.Error("expected to receive an error message from server, but got %v", res)
+	}
+}
+
+func TestDeregisterSuccess(t *testing.T) {
 	req := message.NewMessage()
 	req.Type = message.Deregister
 	req.Meta["id"] = "app_001"
@@ -95,7 +118,28 @@ func TestDeregisterMessage(t *testing.T) {
 	}
 }
 
-func TestPublishMessage(t *testing.T) {
+func TestDeregisterError(t *testing.T) {
+	up.SetError(errors.New("deregister_failed"))
+	defer up.ClearError()
+
+	req := message.NewMessage()
+	req.Type = message.Deregister
+	req.Meta["id"] = "app_001"
+	b, err := req.Encode()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	res, err := doRequest(b)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res.Type != message.Error || res.Meta["error"] != "deregister_failed" {
+		t.Error("expected to receive an error message from server, but got %v", res)
+	}
+}
+
+func TestPublishSuccess(t *testing.T) {
 	req := message.NewMessage()
 	req.Type = message.Publish
 	req.Meta["id"] = "app_001"
@@ -111,6 +155,28 @@ func TestPublishMessage(t *testing.T) {
 	}
 	if res.Type != message.Ack {
 		t.Errorf("expected to receive an ack message from server, but got %s", res.Type)
+	}
+}
+
+func TestPublishError(t *testing.T) {
+	up.SetError(errors.New("publish_failed"))
+	defer up.ClearError()
+
+	req := message.NewMessage()
+	req.Type = message.Publish
+	req.Meta["id"] = "app_001"
+	req.Body = []byte("hello")
+	b, err := req.Encode()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	res, err := doRequest(b)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res.Type != message.Error || res.Meta["error"] != "publish_failed" {
+		t.Error("expected to receive an error message from server, but got %v", res)
 	}
 }
 

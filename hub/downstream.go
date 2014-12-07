@@ -41,30 +41,25 @@ func downstreamHandler(c net.Conn, up Upstream) {
 
 	switch req.Type {
 	case message.Register:
-		// registers with upstream
-		// app has to specify the interface its listening in `meta`
-		// send an error response if no listening interface provided
 		err := up.Register(req)
 		if err != nil {
 			respondError(c, err)
+			return
 		}
-
-		// on success, write { status: "ok } msg
 		respondAck(c)
 	case message.Publish:
 		err := up.Publish(req)
 		if err != nil {
 			respondError(c, err)
+			return
 		}
-
 		respondAck(c)
 	case message.Deregister:
 		err := up.Deregister(req)
 		if err != nil {
 			respondError(c, err)
+			return
 		}
-
-		// on success, write { status: "ok } msg
 		respondAck(c)
 	default:
 		respondError(c, errors.New("unknown_message_type"))
