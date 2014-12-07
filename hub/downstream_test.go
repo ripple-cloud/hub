@@ -1,8 +1,13 @@
 package main
 
 import (
+	"bufio"
+	"bytes"
+	"net"
 	"testing"
 	"time"
+
+	"github.com/ripple/message"
 )
 
 var up Upstream = newMockUpstream()
@@ -22,24 +27,108 @@ func TestListenDownstream(t *testing.T) {
 	}
 }
 
-func TestInvalidJSONMessage(t *testing.T) {
+func doRequest(req []byte) (*message.Message, error) {
 	// dial tcp address
+	c, err := net.Dial(network, laddr)
+	if err != nil {
+		return nil, err
+	}
+
 	// send message
-	// check the response
+	if _, err = c.Write(req); err != nil {
+		return nil, err
+	}
+
+	// read the response
+	b, err := bufio.NewReader(c).ReadBytes('\n')
+	if b == nil && err != nil {
+		return nil, err
+	}
+
+	return message.Decode(bytes.NewReader(b))
+}
+
+func TestInvalidJSONMessage(t *testing.T) {
+	res, err := doRequest([]byte("meta:{},body:test"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if res.Type != message.Error || res.Meta["error"] != "invalid_request" {
+		t.Error("expected to receive an error message from server, but got %v", res)
+	}
 }
 
 func TestRegisterMessage(t *testing.T) {
-	// test for success
-	// test for failure
+	req := message.NewMessage()
+	req.Type = message.Register
+	req.Meta["id"] = "app_001"
+	b, err := req.Encode()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	res, err := doRequest(b)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res.Type != message.Ack {
+		t.Errorf("expected to receive an ack message from server, but got %s", res.Type)
+	}
 }
 
 func TestDeregisterMessage(t *testing.T) {
+	req := message.NewMessage()
+	req.Type = message.Deregister
+	req.Meta["id"] = "app_001"
+	b, err := req.Encode()
+	if err != nil {
+		t.Fatal(err)
+	}
 
+	res, err := doRequest(b)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res.Type != message.Ack {
+		t.Errorf("expected to receive an ack message from server, but got %s", res.Type)
+	}
 }
 
 func TestPublishMessage(t *testing.T) {
+	req := message.NewMessage()
+	req.Type = message.Publish
+	req.Meta["id"] = "app_001"
+	req.Body = []byte("hello")
+	b, err := req.Encode()
+	if err != nil {
+		t.Fatal(err)
+	}
 
+	res, err := doRequest(b)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res.Type != message.Ack {
+		t.Errorf("expected to receive an ack message from server, but got %s", res.Type)
+	}
 }
 
 func TestUnknownMessage(t *testing.T) {
+	req := message.NewMessage()
+	req.Type = 9999 //unknown message type
+	req.Meta["id"] = "app_001"
+	req.Body = []byte("hello")
+	b, err := req.Encode()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	res, err := doRequest(b)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res.Type != message.Error || res.Meta["error"] != "unknown_message_type" {
+		t.Error("expected to receive an error message from server, but got %v", res)
+	}
 }

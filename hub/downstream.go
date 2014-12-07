@@ -1,7 +1,7 @@
 package main
 
 import (
-	"encoding/json"
+	"errors"
 	"log"
 	"net"
 
@@ -33,69 +33,71 @@ func downstreamHandler(c net.Conn, up Upstream) {
 	defer c.Close()
 
 	// decode the incoming message as
-	msg, err := message.Decode(c)
+	req, err := message.Decode(c)
 	if err != nil {
-		log.Printf("[error] [client %s]: %v", c.RemoteAddr(), err)
+		respondError(c, errors.New("invalid_request"))
 		return
 	}
 
-	switch msg.Type {
+	switch req.Type {
 	case message.Register:
 		// registers with upstream
 		// app has to specify the interface its listening in `meta`
 		// send an error response if no listening interface provided
-		err := up.Register(msg)
+		err := up.Register(req)
 		if err != nil {
 			respondError(c, err)
 		}
 
 		// on success, write { status: "ok } msg
-		respondOK(c)
+		respondAck(c)
 	case message.Publish:
-		err := up.Publish(msg)
+		err := up.Publish(req)
 		if err != nil {
 			respondError(c, err)
 		}
 
-		// on success, write { status: "ok } msg
-		respondOK(c)
+		respondAck(c)
 	case message.Deregister:
-		err := up.Deregister(msg)
+		err := up.Deregister(req)
 		if err != nil {
 			respondError(c, err)
 		}
 
 		// on success, write { status: "ok } msg
-		respondOK(c)
+		respondAck(c)
 	default:
-		log.Printf("[error] [client %s]: received a message with unsupported type - %s", msg.Type)
+		respondError(c, errors.New("unknown_message_type"))
 		return
 	}
 }
 
 func respondError(c net.Conn, err error) {
-	errResponse := map[string]string{
-		"error": err.Error(),
-	}
-	j, err := json.Marshal(errResponse)
+	res := message.NewMessage()
+	res.Type = message.Error
+	res.Meta["error"] = err.Error()
+	b, err := res.Encode()
 	if err != nil {
-		// JSON marshalling of errors should always work.
-		// If it fails then it might be some coding error we made ourselves.
-		log.Fatalf("[error] [client %s]: Marshaling error response failed - %v", c.RemoteAddr(), err)
+		log.Printf("[error] [client %s]: %v", c.RemoteAddr(), err)
+		return
 	}
 
-	_, err = c.Write(j)
+	_, err = c.Write(b)
 	if err != nil {
 		log.Printf("[error] [client %s]: %v", c.RemoteAddr(), err)
 	}
 }
 
-func respondOK(c net.Conn) {
-	msg := map[string]string{
-		"status": "ok",
+func respondAck(c net.Conn) {
+	res := message.NewMessage()
+	res.Type = message.Ack
+	b, err := res.Encode()
+	if err != nil {
+		log.Printf("[error] [client %s]: %v", c.RemoteAddr(), err)
+		return
 	}
-	j, _ := json.Marshal(msg)
-	_, err := c.Write(j)
+
+	_, err = c.Write(b)
 	if err != nil {
 		log.Printf("[error] [client %s]: %v", c.RemoteAddr(), err)
 	}

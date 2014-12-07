@@ -15,10 +15,25 @@ const (
 	Register = iota + 1
 	Deregister
 	Publish
+
+	Error
+	Ack
 )
+
+func NewMessage() *Message {
+	return &Message{
+		Type: 0,
+		Meta: map[string]string{},
+		Body: []byte{},
+	}
+}
 
 func Decode(r io.Reader) (*Message, error) {
 	m := &Message{}
 	err := json.NewDecoder(r).Decode(m)
 	return m, err
+}
+
+func (m *Message) Encode() ([]byte, error) {
+	return json.Marshal(m)
 }
