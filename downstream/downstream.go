@@ -1,4 +1,4 @@
-package main
+package downstream
 
 import (
 	"errors"
@@ -6,16 +6,17 @@ import (
 	"net"
 
 	"github.com/ripple/message"
+	"github.com/ripple/upstream"
 )
 
-func listenDownstream(network, laddr string, up Upstream) error {
+func Listen(network, laddr string, up upstream.Upstream) error {
 	l, err := net.Listen(network, laddr)
 	if err != nil {
 		log.Fatalf("[error] %s", err)
 	}
 	defer l.Close()
 
-	log.Printf("[info] %s is listening on %v", appName, l.Addr())
+	log.Printf("[info] Listening for %s on %s", network, l.Addr())
 
 	for {
 		// accept requests and process them
@@ -29,7 +30,7 @@ func listenDownstream(network, laddr string, up Upstream) error {
 }
 
 // downstreamHandler will relay requests from downstream to upstream
-func downstreamHandler(c net.Conn, up Upstream) {
+func downstreamHandler(c net.Conn, up upstream.Upstream) {
 	defer c.Close()
 
 	// decode the incoming message as

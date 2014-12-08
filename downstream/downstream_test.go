@@ -1,4 +1,4 @@
-package main
+package downstream
 
 import (
 	"bufio"
@@ -9,16 +9,17 @@ import (
 	"time"
 
 	"github.com/ripple/message"
+	"github.com/ripple/upstream"
 )
 
-var up *mockUpstream = newMockUpstream()
+var up *upstream.MockUpstream = upstream.NewMockUpstream()
 var network = "tcp4"
 var laddr = ":60001"
 
-func TestListenDownstream(t *testing.T) {
+func TestListen(t *testing.T) {
 	var err chan error
 	go func() {
-		err <- listenDownstream(network, laddr, up)
+		err <- Listen(network, laddr, up)
 	}()
 	select {
 	case <-err:
