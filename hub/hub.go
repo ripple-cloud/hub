@@ -10,16 +10,16 @@ import (
 	"github.com/ripple/upstream"
 )
 
-const appName = "Ripple Hub"
-
 func main() {
-	// read from the config
+	// read from config
+	hubID := "001"
+	broker := "tcp://128.199.132.229:60000"
 	network := "tcp4"
 	laddr := ":8000"
-	up := upstream.NewMQTTUpstream()
 
 	// connect to upstream
-	go up.Connect()
+	up := upstream.New()
+	go up.Connect(hubID, broker)
 
 	// start listening to requests coming from downstream
 	// using the given listener interface

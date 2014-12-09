@@ -1,12 +1,24 @@
 package upstream
 
-import "github.com/ripple/message"
+import (
+	"fmt"
+
+	"github.com/ripple/message"
+)
 
 // Upstream defines the interface Ripple Hub uses to communicate with its upstream.
 type Upstream interface {
-	Connect() error
+	Connect(address, id string) error
 
 	Register(msg *message.Message) error
 	Publish(msg *message.Message) error
 	Deregister(msg *message.Message) error
+}
+
+type RequiredFieldMissingError struct {
+	Field string
+}
+
+func (e RequiredFieldMissingError) Error() string {
+	return fmt.Sprintf("%s is required", e.Field)
 }

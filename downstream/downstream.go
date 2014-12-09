@@ -33,7 +33,7 @@ func Listen(network, laddr string, up upstream.Upstream) error {
 func downstreamHandler(c net.Conn, up upstream.Upstream) {
 	defer c.Close()
 
-	// decode the incoming message as
+	// decode the incoming message
 	req, err := message.Decode(c)
 	if err != nil {
 		respondError(c, errors.New("invalid_request"))
