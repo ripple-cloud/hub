@@ -20,7 +20,7 @@ const (
 	Ack
 )
 
-func NewMessage() *Message {
+func New() *Message {
 	return &Message{
 		Type: 0,
 		Meta: map[string]string{},

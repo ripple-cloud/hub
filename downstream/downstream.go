@@ -69,7 +69,7 @@ func downstreamHandler(c net.Conn, up upstream.Upstream) {
 }
 
 func respondError(c net.Conn, err error) {
-	res := message.NewMessage()
+	res := message.New()
 	res.Type = message.Error
 	res.Meta["error"] = err.Error()
 	b, err := res.Encode()
@@ -85,7 +85,7 @@ func respondError(c net.Conn, err error) {
 }
 
 func respondAck(c net.Conn) {
-	res := message.NewMessage()
+	res := message.New()
 	res.Type = message.Ack
 	b, err := res.Encode()
 	if err != nil {

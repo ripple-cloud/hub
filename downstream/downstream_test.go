@@ -63,7 +63,7 @@ func TestInvalidJSONMessage(t *testing.T) {
 }
 
 func TestRegisterSuccess(t *testing.T) {
-	req := message.NewMessage()
+	req := message.New()
 	req.Type = message.Register
 	req.Meta["id"] = "app_001"
 	b, err := req.Encode()
@@ -84,7 +84,7 @@ func TestRegisterError(t *testing.T) {
 	up.SetError(errors.New("register_failed"))
 	defer up.ClearError()
 
-	req := message.NewMessage()
+	req := message.New()
 	req.Type = message.Register
 	req.Meta["id"] = "app_001"
 	b, err := req.Encode()
@@ -102,7 +102,7 @@ func TestRegisterError(t *testing.T) {
 }
 
 func TestDeregisterSuccess(t *testing.T) {
-	req := message.NewMessage()
+	req := message.New()
 	req.Type = message.Deregister
 	req.Meta["id"] = "app_001"
 	b, err := req.Encode()
@@ -123,7 +123,7 @@ func TestDeregisterError(t *testing.T) {
 	up.SetError(errors.New("deregister_failed"))
 	defer up.ClearError()
 
-	req := message.NewMessage()
+	req := message.New()
 	req.Type = message.Deregister
 	req.Meta["id"] = "app_001"
 	b, err := req.Encode()
@@ -141,7 +141,7 @@ func TestDeregisterError(t *testing.T) {
 }
 
 func TestPublishSuccess(t *testing.T) {
-	req := message.NewMessage()
+	req := message.New()
 	req.Type = message.Publish
 	req.Meta["id"] = "app_001"
 	req.Body = []byte("hello")
@@ -163,7 +163,7 @@ func TestPublishError(t *testing.T) {
 	up.SetError(errors.New("publish_failed"))
 	defer up.ClearError()
 
-	req := message.NewMessage()
+	req := message.New()
 	req.Type = message.Publish
 	req.Meta["id"] = "app_001"
 	req.Body = []byte("hello")
@@ -182,7 +182,7 @@ func TestPublishError(t *testing.T) {
 }
 
 func TestUnknownMessage(t *testing.T) {
-	req := message.NewMessage()
+	req := message.New()
 	req.Type = 9999 //unknown message type
 	req.Meta["id"] = "app_001"
 	req.Body = []byte("hello")
