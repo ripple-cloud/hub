@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"git.eclipse.org/gitroot/paho/org.eclipse.paho.mqtt.golang.git"
-	"github.com/ripple/message"
+	"github.com/ripple-cloud/hub/message"
 )
 
 var tester *mqtt.MqttClient

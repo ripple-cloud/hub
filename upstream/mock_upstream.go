@@ -1,6 +1,6 @@
 package upstream
 
-import "github.com/ripple/message"
+import "github.com/ripple-cloud/hub/message"
 
 type MockUpstream struct {
 	err error

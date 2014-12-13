@@ -3,7 +3,7 @@ package upstream
 import (
 	"fmt"
 
-	"github.com/ripple/message"
+	"github.com/ripple-cloud/hub/message"
 )
 
 // Upstream defines the interface Ripple Hub uses to communicate with its upstream.

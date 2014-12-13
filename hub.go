@@ -6,8 +6,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/ripple/downstream"
-	"github.com/ripple/upstream"
+	"github.com/ripple-cloud/hub/downstream"
+	"github.com/ripple-cloud/hub/upstream"
 )
 
 func main() {

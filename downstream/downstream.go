@@ -5,8 +5,8 @@ import (
 	"log"
 	"net"
 
-	"github.com/ripple/message"
-	"github.com/ripple/upstream"
+	"github.com/ripple-cloud/hub/message"
+	"github.com/ripple-cloud/hub/upstream"
 )
 
 func Listen(network, laddr string, up upstream.Upstream) error {

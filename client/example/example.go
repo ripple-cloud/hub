@@ -4,8 +4,8 @@ import (
 	"log"
 	"net"
 
-	"github.com/ripple/client"
-	"github.com/ripple/message"
+	"github.com/ripple-cloud/hub/client"
+	"github.com/ripple-cloud/hub/message"
 )
 
 func main() {

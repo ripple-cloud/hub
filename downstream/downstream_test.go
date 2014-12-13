@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ripple/message"
-	"github.com/ripple/upstream"
+	"github.com/ripple-cloud/hub/message"
+	"github.com/ripple-cloud/hub/upstream"
 )
 
 var up *upstream.MockUpstream = upstream.NewMockUpstream()
