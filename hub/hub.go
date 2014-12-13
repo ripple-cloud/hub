@@ -19,13 +19,13 @@ func main() {
 
 	// connect to upstream
 	up := upstream.NewMQTTUpstream()
-	go func() {
-		defer up.Disconnect()
-		err := up.Connect(broker, hubID)
-		if err != nil {
-			panic(err)
-		}
-	}()
+	err := up.Connect(broker, hubID)
+	if err != nil {
+		panic(err)
+	}
+	defer up.Disconnect()
+
+	log.Printf("[info] connected to Ripple Cloud as %s", hubID)
 
 	// start listening to requests coming from downstream
 	// using the given listener interface
