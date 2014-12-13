@@ -29,7 +29,7 @@ func TestListen(t *testing.T) {
 	}
 }
 
-func doRequest(req []byte) (*message.Message, error) {
+func doRequestRaw(req []byte) (*message.Message, error) {
 	// dial tcp address
 	c, err := net.Dial(network, laddr)
 	if err != nil {
@@ -37,7 +37,6 @@ func doRequest(req []byte) (*message.Message, error) {
 	}
 	defer c.Close()
 
-	// send message
 	if _, err = c.Write(req); err != nil {
 		return nil, err
 	}
@@ -51,8 +50,18 @@ func doRequest(req []byte) (*message.Message, error) {
 	return message.Decode(bytes.NewReader(b))
 }
 
+func doRequest(req *message.Message) (*message.Message, error) {
+	// send message
+	b, err := req.Encode()
+	if err != nil {
+		return nil, err
+	}
+
+	return doRequestRaw(b)
+}
+
 func TestInvalidJSONMessage(t *testing.T) {
-	res, err := doRequest([]byte("meta:{},body:test"))
+	res, err := doRequestRaw([]byte("meta:{},body:test"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -63,15 +72,7 @@ func TestInvalidJSONMessage(t *testing.T) {
 }
 
 func TestRegisterSuccess(t *testing.T) {
-	req := message.New()
-	req.Type = message.Register
-	req.Meta["id"] = "app_001"
-	b, err := req.Encode()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	res, err := doRequest(b)
+	res, err := doRequest(message.NewRegister("app_001", map[string]string{}))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -84,15 +85,7 @@ func TestRegisterError(t *testing.T) {
 	up.SetError(errors.New("register_failed"))
 	defer up.ClearError()
 
-	req := message.New()
-	req.Type = message.Register
-	req.Meta["id"] = "app_001"
-	b, err := req.Encode()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	res, err := doRequest(b)
+	res, err := doRequest(message.NewRegister("app_001", map[string]string{}))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -102,15 +95,7 @@ func TestRegisterError(t *testing.T) {
 }
 
 func TestDeregisterSuccess(t *testing.T) {
-	req := message.New()
-	req.Type = message.Deregister
-	req.Meta["id"] = "app_001"
-	b, err := req.Encode()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	res, err := doRequest(b)
+	res, err := doRequest(message.NewDeregister("app_001"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -123,15 +108,7 @@ func TestDeregisterError(t *testing.T) {
 	up.SetError(errors.New("deregister_failed"))
 	defer up.ClearError()
 
-	req := message.New()
-	req.Type = message.Deregister
-	req.Meta["id"] = "app_001"
-	b, err := req.Encode()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	res, err := doRequest(b)
+	res, err := doRequest(message.NewDeregister("app_001"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -141,16 +118,9 @@ func TestDeregisterError(t *testing.T) {
 }
 
 func TestPublishSuccess(t *testing.T) {
-	req := message.New()
-	req.Type = message.Publish
-	req.Meta["id"] = "app_001"
-	req.Body = []byte("hello")
-	b, err := req.Encode()
-	if err != nil {
-		t.Fatal(err)
-	}
+	req := message.NewPublish("app_001", map[string]string{}, []byte("hello"))
 
-	res, err := doRequest(b)
+	res, err := doRequest(req)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -163,16 +133,9 @@ func TestPublishError(t *testing.T) {
 	up.SetError(errors.New("publish_failed"))
 	defer up.ClearError()
 
-	req := message.New()
-	req.Type = message.Publish
-	req.Meta["id"] = "app_001"
-	req.Body = []byte("hello")
-	b, err := req.Encode()
-	if err != nil {
-		t.Fatal(err)
-	}
+	req := message.NewPublish("app_001", map[string]string{}, []byte("hello"))
 
-	res, err := doRequest(b)
+	res, err := doRequest(req)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -186,12 +149,8 @@ func TestUnknownMessage(t *testing.T) {
 	req.Type = 9999 //unknown message type
 	req.Meta["id"] = "app_001"
 	req.Body = []byte("hello")
-	b, err := req.Encode()
-	if err != nil {
-		t.Fatal(err)
-	}
 
-	res, err := doRequest(b)
+	res, err := doRequest(req)
 	if err != nil {
 		t.Fatal(err)
 	}

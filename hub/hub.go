@@ -11,11 +11,11 @@ import (
 )
 
 func main() {
-	// read from config
+	// TODO: read from config and handle flags
 	hubID := "ripple-hub-001"
 	broker := "tcp://128.199.132.229:60000"
 	network := "tcp4"
-	laddr := ":8000"
+	laddr := "0.0.0.0:8000"
 
 	// connect to upstream
 	up := upstream.NewMQTTUpstream()
@@ -30,7 +30,6 @@ func main() {
 	// start listening to requests coming from downstream
 	// using the given listener interface
 	go func() {
-		defer downstream.Close()
 		err := downstream.Listen(network, laddr, up)
 		if err != nil {
 			panic(err)

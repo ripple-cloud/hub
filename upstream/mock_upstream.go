@@ -18,7 +18,7 @@ func (up *MockUpstream) ClearError() {
 	up.err = nil
 }
 
-func (up *MockUpstream) Connect() error {
+func (up *MockUpstream) Connect(address, id string) error {
 	if up.err != nil {
 		return up.err
 	}
@@ -44,4 +44,7 @@ func (up *MockUpstream) Deregister(msg *message.Message) error {
 		return up.err
 	}
 	return nil
+}
+
+func (up *MockUpstream) Disconnect() {
 }
