@@ -118,3 +118,19 @@ server.listen(4567, function(data) {
 * server is packaged as a docker image.
 * client will be a binary that can be downloaded and executed.
   - in future, build sd card images containing a full os with the client and built-in apps
+
+### Security
+
+* Make Hub Listen only using Unix Domain Sockets.
+* Whitelist based app priviledges policy.
+
+```
+  listen:
+    app-A
+    app-B
+  send:
+    app-C
+    app-D
+  send-listen:
+    app-E
+```
