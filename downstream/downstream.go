@@ -29,7 +29,7 @@ func Listen(network, laddr string, up upstream.Upstream) error {
 	}
 }
 
-// downstreamHandler will relay requests from downstream to upstream
+// downstreamHandler will relay requests to upstream
 func downstreamHandler(c net.Conn, up upstream.Upstream) {
 	defer c.Close()
 
