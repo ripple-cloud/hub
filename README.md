@@ -19,7 +19,7 @@ Easy way to write and distribute Raspberry PI apps.
 
 |----------|           |----------------|           |---------------|            |-------------|
 |          |           |                |           |               |            |             |
-| Your App |  <----->  |   Pi Client    |  <------> | Cloud Server  |  <------>  | REST Client |
+| Your App |  <----->  |     Hub        |  <------> |    Cloud      |  <------>  | REST Client |
 |          |           |                |           |               |            |             |
 |----------|           |----------------|           |---------------|            |-------------|
 
@@ -35,9 +35,9 @@ You can write apps using any language that can run on a Raspberry Pi. these apps
 * After processing the request or when data is available, apps can send results back to server.
 * Server will store these results (for a limited period) and can optionally call a webhook endpoint specified by the user.
 
-## App API
+## Your App
 
-* Talks to Ripple client inside Pi, through TCP.
+* Talks to Ripple Hub, through TCP.
 * Initialize - specify the port app it is listening
 * Listen on that port for messages
 * Send data back to client.
@@ -82,7 +82,7 @@ server.listen(4567, function(data) {
 ## How to use?
 
 * Signup for an account in cloud server
-* Download and install client app in Pi
+* Download and install Ripple Hub in a Raspberry Pi
 * Write an app conforming to the spec.
 * Call it and access data using the REST interface.
 
@@ -94,11 +94,11 @@ server.listen(4567, function(data) {
 
 ## TODO
 
-* cloud server
-* pi client
-* client library (that talks to pi client over TCP)
-* REST endpoints library (that talks to cloud server)
-* built-in apps
+* Ripple Cloud
+* Ripple Hub
+* Ripple Hub Client library (that talks to Ripple Hub over TCP)
+* REST endpoints to Ripple Cloud
+* Built-in apps
 
 ## Implementation
 
