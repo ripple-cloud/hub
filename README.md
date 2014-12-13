@@ -13,3 +13,11 @@ It will allow local apps to:
 * Apps can register with Hub and notify the port it's listening on.
 * When there's a request for an app from upstream, Hub will forward it to the app's port.
 * When an app publish data Hub will send it to upstream.
+
+### Development
+
+```
+$ make start-mosquitto
+$ go install
+$ hub
+```
