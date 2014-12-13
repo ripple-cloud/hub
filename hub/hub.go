@@ -18,7 +18,7 @@ func main() {
 	laddr := ":8000"
 
 	// connect to upstream
-	up := upstream.New()
+	up := upstream.NewMQTTUpstream()
 	go up.Connect(hubID, broker)
 
 	// start listening to requests coming from downstream
@@ -30,6 +30,6 @@ func main() {
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
 	log.Printf("[info] %v", <-ch)
 
-	// TODO
-	// Disconnect from upstream and close downstream connections gracefully
+	up.Disconnect()
+	// TODO: Close downstream connections gracefully
 }

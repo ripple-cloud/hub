@@ -23,7 +23,7 @@ type MQTTUpstream struct {
 	appListeners map[string]appListener
 }
 
-func New() *MQTTUpstream {
+func NewMQTTUpstream() *MQTTUpstream {
 	return &MQTTUpstream{
 		appListeners: map[string]appListener{},
 	}
@@ -156,4 +156,9 @@ func (up *MQTTUpstream) Publish(msg *message.Message) error {
 	up.client.PublishMessage(fmt.Sprintf("data/hub/%s/app/%s", up.id, appID), mqtt.NewMessage(b))
 
 	return nil
+}
+
+func (up *MQTTUpstream) Disconnect() {
+	// TODO: allow configuring wait time for disconnect
+	up.client.Disconnect(5)
 }

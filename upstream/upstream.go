@@ -9,6 +9,7 @@ import (
 // Upstream defines the interface Ripple Hub uses to communicate with its upstream.
 type Upstream interface {
 	Connect(address, id string) error
+	Disconnect()
 
 	Register(msg *message.Message) error
 	Publish(msg *message.Message) error

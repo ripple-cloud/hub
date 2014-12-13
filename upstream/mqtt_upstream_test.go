@@ -16,10 +16,11 @@ var tester *mqtt.MqttClient
 var up *MQTTUpstream
 
 const hubID = "hub-1"
+const brokerAddr = "tcp://128.199.132.229:60000" // FIXME: get this from an env variable
 
 func init() {
 	opts := mqtt.NewClientOptions()
-	opts.AddBroker("tcp://128.199.132.229:60000") // FIXME: get this from an env variable
+	opts.AddBroker(brokerAddr)
 	opts.SetClientId("test-upstream-client")
 	opts.SetCleanSession(true)
 
@@ -31,8 +32,8 @@ func init() {
 }
 
 func TestConnect(t *testing.T) {
-	up = New()
-	if err := up.Connect("tcp://128.199.132.229:60000", hubID); err != nil {
+	up = NewMQTTUpstream()
+	if err := up.Connect(brokerAddr, hubID); err != nil {
 		t.Fatalf("failed to connect to MQTT server err: %v", err)
 	}
 }
@@ -193,7 +194,7 @@ func TestPublish(t *testing.T) {
 
 		rcvdMsg <- pm
 	}
-	if _, err = up.client.StartSubscription(handler, tf); err != nil {
+	if _, err = tester.StartSubscription(handler, tf); err != nil {
 		t.Errorf("failed to subscribe to topic %s", err)
 	}
 
@@ -231,4 +232,12 @@ func TestPublishWithoutID(t *testing.T) {
 	}
 }
 
-// disconnect from server
+func TestDisconnect(t *testing.T) {
+	up.Disconnect()
+
+	// TODO: verify if disconnected from upstream
+}
+
+func TestTeardown(t *testing.T) {
+	tester.Disconnect(5)
+}
