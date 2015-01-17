@@ -15,7 +15,7 @@ func main() {
 	hubID := "ripple-hub-001"
 	broker := "tcp://128.199.132.229:60000"
 	network := "tcp4"
-	laddr := "0.0.0.0:8000"
+	addr := "0.0.0.0:8000"
 
 	// connect to upstream
 	up := upstream.NewMQTTUpstream()
@@ -30,7 +30,7 @@ func main() {
 	// start listening to requests coming from downstream
 	// using the given listener interface
 	go func() {
-		err := downstream.Listen(network, laddr, up)
+		err := downstream.Listen(network, addr, up)
 		if err != nil {
 			panic(err)
 		}
