@@ -1,11 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net"
 
+	"github.com/ripple-cloud/common/message"
 	"github.com/ripple-cloud/hub/client"
-	"github.com/ripple-cloud/hub/message"
 )
 
 func main() {

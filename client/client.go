@@ -5,7 +5,7 @@ import (
 	"bytes"
 	"net"
 
-	"github.com/ripple-cloud/hub/message"
+	"github.com/ripple-cloud/common/message"
 )
 
 type RippleClient struct {

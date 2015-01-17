@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ripple-cloud/hub/message"
+	"github.com/ripple-cloud/common/message"
 	"github.com/ripple-cloud/hub/upstream"
 )
 

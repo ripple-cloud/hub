@@ -9,7 +9,7 @@ import (
 	"net"
 
 	"git.eclipse.org/gitroot/paho/org.eclipse.paho.mqtt.golang.git"
-	"github.com/ripple-cloud/hub/message"
+	"github.com/ripple-cloud/common/message"
 )
 
 type appListener struct {

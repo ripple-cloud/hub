@@ -1,5 +1,7 @@
 package upstream
 
+// TODO: refactor these tests to be self-contained
+
 import (
 	"bytes"
 	"fmt"
@@ -9,7 +11,7 @@ import (
 	"time"
 
 	"git.eclipse.org/gitroot/paho/org.eclipse.paho.mqtt.golang.git"
-	"github.com/ripple-cloud/hub/message"
+	"github.com/ripple-cloud/common/message"
 )
 
 var tester *mqtt.MqttClient
