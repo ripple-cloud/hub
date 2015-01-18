@@ -79,9 +79,9 @@ func startListen(l net.Listener, done chan struct{}, errChan chan error) {
 }
 
 func TestRegister(t *testing.T) {
-	appID := "app-001"
+	topic := "topic-for-register"
 
-	// start an app listening on any available port
+	// start a service listening on any available port
 	l, err := net.Listen("tcp4", ":0")
 	if err != nil {
 		t.Fatalf("cannot listen on given address err: %s", err)
@@ -93,8 +93,8 @@ func TestRegister(t *testing.T) {
 	errChan := make(chan error)
 	go startListen(l, done, errChan)
 
-	// register the app with upstream
-	regMsg := message.NewRegister(appID, map[string]string{
+	// register the service with upstream
+	regMsg := message.NewRegister(topic, map[string]string{
 		"network": l.Addr().Network(),
 		"address": l.Addr().String(),
 	})
@@ -102,19 +102,19 @@ func TestRegister(t *testing.T) {
 		t.Fatalf("register failed - %v", err)
 	}
 
-	// send requests to the app
-	reqMsg := message.NewRequest(appID, map[string]string{}, []byte("hello"))
+	// send requests on a topic
+	reqMsg := message.NewRequest(topic, map[string]string{}, []byte("hello"))
 	b, err := reqMsg.Encode()
 	if err != nil {
 		t.Fatalf("failed to encode message %s", err)
 	}
 	m := mqtt.NewMessage(b)
-	tester.PublishMessage(fmt.Sprintf("hub/%s/app/%s", hubID, appID), m)
-	tester.PublishMessage(fmt.Sprintf("app/%s", appID), m)
+	tester.PublishMessage(fmt.Sprintf("hub/%s/%s", hubID, topic), m)
+	tester.PublishMessage(fmt.Sprintf("%s", topic), m)
 
 	select {
 	case <-done:
-		// app received all messages
+		// service received all messages
 		// test passes
 		return
 	case err := <-errChan:
@@ -124,64 +124,66 @@ func TestRegister(t *testing.T) {
 	}
 }
 
-func TestRegisterWithoutID(t *testing.T) {
+func TestRegisterWithoutTopic(t *testing.T) {
 	msg := message.New()
 	msg.Type = message.Register
 
 	err := up.Register(msg)
 	if _, ok := err.(RequiredFieldMissingError); !ok {
-		t.Errorf("expected register to return id required error, but got - %v", err)
+		t.Errorf("expected register to return required field missing error, but got - %v", err)
 	}
 }
 
 func TestDeregister(t *testing.T) {
-	appID := "app-001"
+	topic := "topic-for-deregister"
 
-	// register the app with upstream
-	regMsg := message.NewRegister(appID, map[string]string{
+	// register 3 services for same topic
+	for _, s := range [][]string{{"tcp", ":8080"}, {"tcp", "9000"}, {"tcp", "11000"}} {
+		regMsg := message.NewRegister(topic, map[string]string{
+			"network": s[0],
+			"address": s[1],
+		})
+		if err := up.Register(regMsg); err != nil {
+			t.Fatalf("register failed - %v", err)
+		}
+	}
+
+	if len(up.listeners[topic]) != 3 {
+		t.Error("not all services registered")
+	}
+
+	// deregister one service
+	deregMsg := message.NewDeregister(topic, map[string]string{
 		"network": "tcp",
-		"address": ":8080",
+		"address": ":9000",
 	})
-	if err := up.Register(regMsg); err != nil {
-		t.Fatalf("register failed - %v", err)
-	}
-
-	_, ok := up.appListeners[appID]
-	if !ok {
-		t.Error("app's listener should be registered")
-	}
-
-	// *deregister* the app
-	deregMsg := message.NewDeregister(appID)
 	if err := up.Deregister(deregMsg); err != nil {
 		t.Fatalf("deregister failed - %v", err)
 	}
 
-	// TODO: currently there's no test for UNSUBSCRIBE on MQTT server
-	// let's just assume the message is sent correctly
-
-	// should remove app's listener
-	_, ok = up.appListeners[appID]
-	if ok {
-		t.Error("app's listener should be removed after deregister")
+	// should only remove that service's listener
+	ls := up.listeners[topic]
+	if ls[0].network != "tcp" || ls[1].address != ":8080" &&
+		ls[1].network != "tcp" && ls[1].address != ":11000" {
+		t.Error("should not have remove all listeners for the topic")
 	}
 }
 
-func TestDeregisterWithoutID(t *testing.T) {
+func TestDeregisterWithoutTopic(t *testing.T) {
 	msg := message.New()
 	msg.Type = message.Deregister
 
 	err := up.Deregister(msg)
 	if _, ok := err.(RequiredFieldMissingError); !ok {
-		t.Errorf("expected register to return id required error, but got - %v", err)
+		t.Errorf("expected deregister to return required field missing error, but got - %v", err)
 	}
 }
 
 func TestPublish(t *testing.T) {
-	appID := "app-001"
+	topic := "topic-for-publish"
 
-	// subscribe to notices from the app
-	tf, err := mqtt.NewTopicFilter(fmt.Sprintf("data/hub/%s/app/%s", up.id, appID), byte(mqtt.QOS_ZERO))
+	// subscribe to messages for the topic
+	tf, err := mqtt.NewTopicFilter(fmt.Sprintf("data/hub/%s/%s", up.id, topic), byte(mqtt.QOS_ZERO))
 	if err != nil {
 		t.Fatalf("failed to create topic filter %s", err)
 	}
@@ -196,12 +198,16 @@ func TestPublish(t *testing.T) {
 
 		rcvdMsg <- pm
 	}
-	if _, err = tester.StartSubscription(handler, tf); err != nil {
+	rcpt, err := tester.StartSubscription(handler, tf)
+	if err != nil {
 		t.Errorf("failed to subscribe to topic %s", err)
 	}
 
+	// wait for the receipt
+	<-rcpt
+
 	// publish a message to upstream
-	pubMsg := message.NewPublish(appID, map[string]string{"foo": "bar"}, []byte("hello"))
+	pubMsg := message.NewPublish(topic, map[string]string{"foo": "bar"}, []byte("hello"))
 	if err := up.Publish(pubMsg); err != nil {
 		t.Fatalf("publish failed - %v", err)
 	}
@@ -211,7 +217,7 @@ func TestPublish(t *testing.T) {
 		if m.Type != message.Publish {
 			t.Errorf("expected a message with type publish: %v", m)
 		}
-		if !reflect.DeepEqual(m.Meta, map[string]string{"foo": "bar", "id": appID}) {
+		if !reflect.DeepEqual(m.Meta, map[string]string{"foo": "bar", "topic": topic}) {
 			t.Errorf("received message has unexpected meta data: %v", m)
 		}
 		if !bytes.Equal(m.Body, []byte("hello")) {
@@ -224,13 +230,13 @@ func TestPublish(t *testing.T) {
 	}
 }
 
-func TestPublishWithoutID(t *testing.T) {
+func TestPublishWithoutTopic(t *testing.T) {
 	msg := message.New()
 	msg.Type = message.Publish
 
 	err := up.Publish(msg)
 	if _, ok := err.(RequiredFieldMissingError); !ok {
-		t.Errorf("expected register to return id required error, but got - %v", err)
+		t.Errorf("expected publish to return required field missing error, but got - %v", err)
 	}
 }
 
